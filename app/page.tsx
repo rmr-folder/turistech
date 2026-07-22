@@ -16,9 +16,9 @@ export default async function Home() {
           <Link href="/" className="text-xl font-bold text-gray-900 tracking-tight">
             turistech
           </Link>
-          <p className="text-sm text-gray-400 hidden md:block">
-            Descubra o Brasil
-          </p>
+          <Link href="/explorar" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
+           Explorar destinos
+          </Link>
         </div>
       </header>
 
