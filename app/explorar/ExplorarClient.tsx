@@ -81,14 +81,13 @@ export default function ExplorarClient({ municipios, atrativos, estados, categor
           {tipos.map((t) => (
             <button
               key={t.key}
-              onClick={() => {
+                onClick={() => {
                 if (!t.disabled) {
-                  setTipo(t.key as 'municipios' | 'atrativos')
-                  setBusca('')
-                  setEstado('')
-                  setCategoria('')
+                setTipo(t.key as 'municipios' | 'atrativos')
+                setEstado('')
+                setCategoria('')
                 }
-              }}
+                }}
               disabled={t.disabled}
               className={`px-5 py-2 rounded-full text-sm border transition-colors ${
                 t.disabled
