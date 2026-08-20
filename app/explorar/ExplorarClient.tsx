@@ -18,6 +18,7 @@ interface Municipio {
   slug: string
   estado: string
   foto_capa: string
+  tipos: string[]
   atrativos: Atrativo[]
 }
 
@@ -28,16 +29,27 @@ interface Props {
   categorias: string[]
 }
 
+const TIPOS = [
+  { label: 'Praia', emoji: '🏖️', cor: 'from-blue-400 to-cyan-300' },
+  { label: 'Serra e Frio', emoji: '🏔️', cor: 'from-slate-500 to-slate-400' },
+  { label: 'Ecoturismo', emoji: '🌿', cor: 'from-green-500 to-emerald-400' },
+  { label: 'Cultura e História', emoji: '🏛️', cor: 'from-amber-500 to-yellow-400' },
+  { label: 'Aventura', emoji: '🤿', cor: 'from-orange-500 to-red-400' },
+  { label: 'Religioso', emoji: '🙏', cor: 'from-purple-500 to-violet-400' },
+]
+
 export default function ExplorarClient({ municipios, atrativos, estados, categorias }: Props) {
   const [busca, setBusca] = useState('')
   const [tipo, setTipo] = useState<'municipios' | 'atrativos'>('municipios')
   const [estado, setEstado] = useState('')
   const [categoria, setCategoria] = useState('')
+  const [tipoSelecionado, setTipoSelecionado] = useState('')
 
   const municipiosFiltrados = municipios.filter((m) => {
     const bateBusca = !busca || m.nome.toLowerCase().includes(busca.toLowerCase())
     const bateEstado = !estado || m.estado === estado
-    return bateBusca && bateEstado
+    const bateTipo = !tipoSelecionado || m.tipos?.includes(tipoSelecionado)
+    return bateBusca && bateEstado && bateTipo
   })
 
   const agrativosFiltrados = atrativos.filter((a) => {
@@ -61,7 +73,10 @@ export default function ExplorarClient({ municipios, atrativos, estados, categor
           type="text"
           placeholder={tipo === 'municipios' ? 'Buscar município...' : 'Buscar atrativo...'}
           value={busca}
-          onChange={(e) => setBusca(e.target.value)}
+          onChange={(e) => {
+            setBusca(e.target.value)
+            setTipoSelecionado('')
+          }}
           className="w-full border border-gray-200 rounded-2xl px-5 py-4 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 text-lg"
         />
         {busca && (
@@ -81,13 +96,14 @@ export default function ExplorarClient({ municipios, atrativos, estados, categor
           {tipos.map((t) => (
             <button
               key={t.key}
-                onClick={() => {
+              onClick={() => {
                 if (!t.disabled) {
-                setTipo(t.key as 'municipios' | 'atrativos')
-                setEstado('')
-                setCategoria('')
+                  setTipo(t.key as 'municipios' | 'atrativos')
+                  setEstado('')
+                  setCategoria('')
+                  setTipoSelecionado('')
                 }
-                }}
+              }}
               disabled={t.disabled}
               className={`px-5 py-2 rounded-full text-sm border transition-colors ${
                 t.disabled
@@ -104,9 +120,34 @@ export default function ExplorarClient({ municipios, atrativos, estados, categor
         </div>
       </div>
 
+      {/* Quadrantes de tipo — só aparece em Municípios e sem busca ativa */}
+      {tipo === 'municipios' && !busca && (
+        <div className="mb-10">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Explorar por experiência</p>
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+            {TIPOS.map((t) => (
+              <button
+                key={t.label}
+                onClick={() => setTipoSelecionado(tipoSelecionado === t.label ? '' : t.label)}
+                className={`relative rounded-2xl overflow-hidden h-24 flex flex-col items-center justify-center gap-1 transition-all ${
+                  tipoSelecionado === t.label
+                    ? 'ring-2 ring-gray-900 scale-95'
+                    : 'hover:scale-95'
+                }`}
+              >
+                <div className={`absolute inset-0 bg-gradient-to-br ${t.cor}`} />
+                <span className="relative text-2xl">{t.emoji}</span>
+                <span className="relative text-xs font-semibold text-white text-center px-1 leading-tight">
+                  {t.label}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Filtros secundários */}
       <div className="flex flex-wrap gap-8 mb-12">
-        {/* Filtro por estado */}
         <div>
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Estado</p>
           <div className="flex flex-wrap gap-2">
@@ -132,7 +173,6 @@ export default function ExplorarClient({ municipios, atrativos, estados, categor
           </div>
         </div>
 
-        {/* Filtro por categoria — só aparece em Atrativos */}
         {tipo === 'atrativos' && (
           <div>
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Categoria</p>
@@ -182,10 +222,7 @@ export default function ExplorarClient({ municipios, atrativos, estados, categor
                 </span>
               </div>
               <p className="font-semibold text-gray-900">{municipio.nome}</p>
-              <p className="text-sm text-gray-400 mt-0.5">
-                {municipio.atrativos?.length} atrativo{municipio.atrativos?.length !== 1 ? 's' : ''}
-              </p>
-            </Link>
+                          </Link>
           ))}
           {municipiosFiltrados.length === 0 && (
             <p className="text-gray-400 col-span-3 text-center py-20">Nenhum município encontrado.</p>
