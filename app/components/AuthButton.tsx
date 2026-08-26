@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '../../lib/supabase-browser'
+import Link from 'next/link'
 
 export default function AuthButton() {
   const [user, setUser] = useState<any>(null)
@@ -42,6 +43,13 @@ export default function AuthButton() {
   if (user) {
     return (
       <div className="flex items-center gap-3">
+        <Link
+          href="/meus-roteiros"
+          className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+        >
+          Meus roteiros
+        </Link>
+        <span className="text-gray-300">|</span>
         <span className="text-sm text-gray-500 hidden md:block">
           {user.user_metadata?.name?.split(' ')[0] || 'Minha conta'}
         </span>
