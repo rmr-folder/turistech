@@ -1,6 +1,7 @@
 import { supabase } from '../../../lib/supabase'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import AdicionarAoRoteiro from '../../components/AdicionarAoRoteiro'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -73,7 +74,10 @@ export default async function AtrativoPage({ params }: Props) {
               {atrativo.descricao}
             </p>
           )}
-
+          <AdicionarAoRoteiro
+            atrativoId={atrativo.id}
+            atrativoNome={atrativo.nome}
+          />
           {atrativo.endereco && (
             <div className="mt-8 flex items-start gap-2 text-gray-500">
               <span className="text-sm">{atrativo.endereco}</span>
