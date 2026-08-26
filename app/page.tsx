@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { supabase } from '../lib/supabase'
+import AuthButton from './components/AuthButton'
 
 export const revalidate = 0
 
@@ -22,7 +23,8 @@ export default async function Home() {
             </Link>
             <Link href="/explorar" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
             Explorar
-           </Link>
+            </Link>
+            <AuthButton />
           </div>
         </div>
       </header>
