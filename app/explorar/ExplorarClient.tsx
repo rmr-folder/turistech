@@ -22,9 +22,19 @@ interface Municipio {
   atrativos: Atrativo[]
 }
 
+interface Roteiro {
+  id: string
+  titulo: string
+  slug: string
+  descricao: string
+  duracao_dias: number
+  foto_capa: string
+}
+
 interface Props {
   municipios: Municipio[]
   atrativos: Atrativo[]
+  roteiros: Roteiro[]
   estados: string[]
   categorias: string[]
 }
@@ -38,32 +48,32 @@ const TIPOS = [
   { label: 'Religioso', emoji: '🙏', cor: 'from-purple-500 to-violet-400' },
 ]
 
-export default function ExplorarClient({ municipios, atrativos, estados, categorias }: Props) {
+export default function ExplorarClient({ municipios, atrativos, roteiros, estados, categorias }: Props) {
   const [busca, setBusca] = useState('')
-  const [tipo, setTipo] = useState<'municipios' | 'atrativos'>('municipios')
-  const [estado, setEstado] = useState('')
-  const [categoria, setCategoria] = useState('')
   const [tipoSelecionado, setTipoSelecionado] = useState('')
+
+  const buscaAtiva = busca.length > 0 || tipoSelecionado.length > 0
 
   const municipiosFiltrados = municipios.filter((m) => {
     const bateBusca = !busca || m.nome.toLowerCase().includes(busca.toLowerCase())
-    const bateEstado = !estado || m.estado === estado
     const bateTipo = !tipoSelecionado || m.tipos?.includes(tipoSelecionado)
-    return bateBusca && bateEstado && bateTipo
+    return bateBusca && bateTipo
   })
 
   const agrativosFiltrados = atrativos.filter((a) => {
-    const bateBusca = !busca || a.nome.toLowerCase().includes(busca.toLowerCase())
-    const bateCategoria = !categoria || a.categoria === categoria
-    const bateEstado = !estado || a.municipios?.estado === estado
-    return bateBusca && bateCategoria && bateEstado
+    const bateBusca = !busca ||
+      a.nome.toLowerCase().includes(busca.toLowerCase()) ||
+      a.municipios?.nome.toLowerCase().includes(busca.toLowerCase())
+    const bateTipo = !tipoSelecionado || municipios
+      .find(m => m.slug === a.municipios?.['slug'])
+      ?.tipos?.includes(tipoSelecionado)
+    return bateBusca && bateTipo
   })
 
-  const tipos = [
-    { key: 'municipios', label: 'Municípios' },
-    { key: 'atrativos', label: 'Atrativos' },
-    { key: 'roteiros', label: 'Roteiros', disabled: true },
-  ]
+  const roteirosFiltrados = roteiros.filter((r) => {
+    const bateBusca = !busca || r.titulo.toLowerCase().includes(busca.toLowerCase())
+    return bateBusca
+  })
 
   return (
     <div>
@@ -71,7 +81,7 @@ export default function ExplorarClient({ municipios, atrativos, estados, categor
       <div className="relative mb-8">
         <input
           type="text"
-          placeholder={tipo === 'municipios' ? 'Buscar município...' : 'Buscar atrativo...'}
+          placeholder="Buscar destino, atrativo ou roteiro..."
           value={busca}
           onChange={(e) => {
             setBusca(e.target.value)
@@ -89,41 +99,12 @@ export default function ExplorarClient({ municipios, atrativos, estados, categor
         )}
       </div>
 
-      {/* Filtro de tipo */}
-      <div className="mb-8">
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">O que você procura?</p>
-        <div className="flex gap-2">
-          {tipos.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => {
-                if (!t.disabled) {
-                  setTipo(t.key as 'municipios' | 'atrativos')
-                  setEstado('')
-                  setCategoria('')
-                  setTipoSelecionado('')
-                }
-              }}
-              disabled={t.disabled}
-              className={`px-5 py-2 rounded-full text-sm border transition-colors ${
-                t.disabled
-                  ? 'border-gray-100 text-gray-300 cursor-not-allowed'
-                  : tipo === t.key
-                  ? 'bg-gray-900 text-white border-gray-900'
-                  : 'border-gray-200 text-gray-600 hover:border-gray-400'
-              }`}
-            >
-              {t.label}
-              {t.disabled && <span className="ml-1 text-xs">(em breve)</span>}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Quadrantes de tipo — só aparece em Municípios e sem busca ativa */}
-      {tipo === 'municipios' && !busca && (
+      {/* Quadrantes de experiência */}
+      {!busca && (
         <div className="mb-10">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Explorar por experiência</p>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">
+            Explorar por experiência
+          </p>
           <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
             {TIPOS.map((t) => (
               <button
@@ -146,119 +127,183 @@ export default function ExplorarClient({ municipios, atrativos, estados, categor
         </div>
       )}
 
-      {/* Filtros secundários */}
-      <div className="flex flex-wrap gap-8 mb-12">
-        <div>
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Estado</p>
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => setEstado('')}
-              className={`px-4 py-1.5 rounded-full text-sm border transition-colors ${
-                !estado ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-200 text-gray-600 hover:border-gray-400'
-              }`}
-            >
-              Todos
-            </button>
-            {estados.map((e) => (
-              <button
-                key={e}
-                onClick={() => setEstado(estado === e ? '' : e)}
-                className={`px-4 py-1.5 rounded-full text-sm border transition-colors ${
-                  estado === e ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-200 text-gray-600 hover:border-gray-400'
-                }`}
-              >
-                {e}
-              </button>
-            ))}
-          </div>
-        </div>
+      {/* Resultados quando busca ou tipo ativo */}
+      {buscaAtiva ? (
+        <div className="space-y-12">
+          {/* Municípios */}
+          {municipiosFiltrados.length > 0 && (
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Municípios</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {municipiosFiltrados.map((municipio) => (
+                  <Link key={municipio.id} href={`/municipios/${municipio.slug}`} className="group">
+                    <div className="relative h-36 rounded-2xl overflow-hidden bg-gray-100 mb-2">
+                      {municipio.foto_capa ? (
+                        <img src={municipio.foto_capa} alt={municipio.nome} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200" />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                      <span className="absolute bottom-2 left-2 text-xs font-medium text-white bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full">
+                        {municipio.estado}
+                      </span>
+                    </div>
+                    <p className="text-sm font-semibold text-gray-900">{municipio.nome}</p>
+                    <p className="text-xs text-gray-400">{municipio.atrativos?.length} atrativos</p>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
 
-        {tipo === 'atrativos' && (
+          {/* Atrativos */}
+          {agrativosFiltrados.length > 0 && (
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Atrativos</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {agrativosFiltrados.map((atrativo) => (
+                  <Link key={atrativo.id} href={`/atrativos/${atrativo.slug}`} className="group">
+                    <div className="relative h-36 rounded-2xl overflow-hidden bg-gray-100 mb-2">
+                      {atrativo.foto_capa ? (
+                        <img src={atrativo.foto_capa} alt={atrativo.nome} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200" />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                      <span className="absolute bottom-2 left-2 text-xs font-medium text-white bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full">
+                        {atrativo.categoria}
+                      </span>
+                    </div>
+                    <p className="text-sm font-semibold text-gray-900">{atrativo.nome}</p>
+                    <p className="text-xs text-gray-400">{atrativo.municipios?.nome}</p>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Roteiros */}
+          {roteirosFiltrados.length > 0 && !tipoSelecionado && (
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Roteiros</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {roteirosFiltrados.map((roteiro) => (
+                  <Link key={roteiro.id} href={`/roteiros/${roteiro.slug}`} className="group">
+                    <div className="relative h-40 rounded-2xl overflow-hidden bg-gray-100 mb-2">
+                      {roteiro.foto_capa ? (
+                        <img src={roteiro.foto_capa} alt={roteiro.titulo} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                          <span className="text-3xl">🗺️</span>
+                        </div>
+                      )}
+                      {roteiro.duracao_dias && (
+                        <span className="absolute bottom-2 left-2 text-xs font-medium text-white bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full">
+                          {roteiro.duracao_dias} dias
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm font-semibold text-gray-900">{roteiro.titulo}</p>
+                    {roteiro.descricao && (
+                      <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{roteiro.descricao}</p>
+                    )}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {municipiosFiltrados.length === 0 && agrativosFiltrados.length === 0 && roteirosFiltrados.length === 0 && (
+            <p className="text-gray-400 text-center py-20">Nenhum resultado encontrado.</p>
+          )}
+        </div>
+      ) : (
+        /* Seções padrão quando nada está selecionado */
+        <div className="space-y-12">
+          {/* Roteiros em destaque */}
+          {roteiros.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">Roteiros em destaque</h2>
+                <Link href="/roteiros" className="text-sm text-gray-400 hover:text-gray-900 transition-colors">
+                  Ver todos →
+                </Link>
+              </div>
+              <div className="flex gap-4 overflow-x-auto pb-2 -mx-1 px-1">
+                {roteiros.slice(0, 5).map((roteiro) => (
+                  <Link key={roteiro.id} href={`/roteiros/${roteiro.slug}`} className="flex-shrink-0 w-56 group">
+                    <div className="relative h-36 rounded-2xl overflow-hidden bg-gray-100 mb-2">
+                      {roteiro.foto_capa ? (
+                        <img src={roteiro.foto_capa} alt={roteiro.titulo} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                          <span className="text-3xl">🗺️</span>
+                        </div>
+                      )}
+                      {roteiro.duracao_dias && (
+                        <span className="absolute bottom-2 left-2 text-xs font-medium text-white bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full">
+                          {roteiro.duracao_dias} dias
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm font-semibold text-gray-900 leading-tight">{roteiro.titulo}</p>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Municípios */}
           <div>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Categoria</p>
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setCategoria('')}
-                className={`px-4 py-1.5 rounded-full text-sm border transition-colors ${
-                  !categoria ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-200 text-gray-600 hover:border-gray-400'
-                }`}
-              >
-                Todas
-              </button>
-              {categorias.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => setCategoria(categoria === c ? '' : c)}
-                  className={`px-4 py-1.5 rounded-full text-sm border transition-colors ${
-                    categoria === c ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-200 text-gray-600 hover:border-gray-400'
-                  }`}
-                >
-                  {c}
-                </button>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">Destinos</h2>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {municipios.slice(0, 8).map((municipio) => (
+                <Link key={municipio.id} href={`/municipios/${municipio.slug}`} className="group">
+                  <div className="relative h-36 rounded-2xl overflow-hidden bg-gray-100 mb-2">
+                    {municipio.foto_capa ? (
+                      <img src={municipio.foto_capa} alt={municipio.nome} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                    <span className="absolute bottom-2 left-2 text-xs font-medium text-white bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full">
+                      {municipio.estado}
+                    </span>
+                  </div>
+                  <p className="text-sm font-semibold text-gray-900">{municipio.nome}</p>
+                  <p className="text-xs text-gray-400">{municipio.atrativos?.length} atrativos</p>
+                </Link>
               ))}
             </div>
           </div>
-        )}
-      </div>
 
-      {/* Resultados — Municípios */}
-      {tipo === 'municipios' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {municipiosFiltrados.map((municipio) => (
-            <Link key={municipio.id} href={`/municipios/${municipio.slug}`} className="group">
-              <div className="relative h-52 rounded-2xl overflow-hidden bg-gray-100 mb-4">
-                {municipio.foto_capa ? (
-                  <img
-                    src={municipio.foto_capa}
-                    alt={municipio.nome}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200" />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                <span className="absolute bottom-3 left-3 text-xs font-medium text-white bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full">
-                  {municipio.estado}
-                </span>
-              </div>
-              <p className="font-semibold text-gray-900">{municipio.nome}</p>
-                          </Link>
-          ))}
-          {municipiosFiltrados.length === 0 && (
-            <p className="text-gray-400 col-span-3 text-center py-20">Nenhum município encontrado.</p>
-          )}
-        </div>
-      )}
-
-      {/* Resultados — Atrativos */}
-      {tipo === 'atrativos' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {agrativosFiltrados.map((atrativo) => (
-            <Link key={atrativo.id} href={`/atrativos/${atrativo.slug}`} className="group">
-              <div className="relative h-52 rounded-2xl overflow-hidden bg-gray-100 mb-4">
-                {atrativo.foto_capa ? (
-                  <img
-                    src={atrativo.foto_capa}
-                    alt={atrativo.nome}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200" />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                <span className="absolute bottom-3 left-3 text-xs font-medium text-white bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full">
-                  {atrativo.categoria}
-                </span>
-              </div>
-              <p className="font-semibold text-gray-900">{atrativo.nome}</p>
-              <p className="text-sm text-gray-400 mt-0.5">
-                {atrativo.municipios?.nome}, {atrativo.municipios?.estado}
-              </p>
-            </Link>
-          ))}
-          {agrativosFiltrados.length === 0 && (
-            <p className="text-gray-400 col-span-3 text-center py-20">Nenhum atrativo encontrado.</p>
-          )}
+          {/* Atrativos */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">Atrativos</h2>
+            </div>
+            <div className="flex gap-4 overflow-x-auto pb-2 -mx-1 px-1">
+              {atrativos.slice(0, 10).map((atrativo) => (
+                <Link key={atrativo.id} href={`/atrativos/${atrativo.slug}`} className="flex-shrink-0 w-44 group">
+                  <div className="relative h-36 rounded-2xl overflow-hidden bg-gray-100 mb-2">
+                    {atrativo.foto_capa ? (
+                      <img src={atrativo.foto_capa} alt={atrativo.nome} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                    <span className="absolute bottom-2 left-2 text-xs font-medium text-white bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full">
+                      {atrativo.categoria}
+                    </span>
+                  </div>
+                  <p className="text-sm font-semibold text-gray-900 leading-tight">{atrativo.nome}</p>
+                  <p className="text-xs text-gray-400">{atrativo.municipios?.nome}</p>
+                </Link>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>

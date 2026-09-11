@@ -13,6 +13,12 @@ export default async function ExplorarPage() {
     .from('atrativos')
     .select('*, municipios(nome, estado, slug)')
 
+  const { data: roteiros } = await supabase
+    .from('roteiros')
+    .select('*')
+    .eq('publico', true)
+    .order('created_at', { ascending: false })
+
   const estados = [...new Set(municipios?.map((m) => m.estado))].sort() as string[]
   const categorias = [...new Set(atrativos?.map((a) => a.categoria))].sort() as string[]
 
@@ -23,7 +29,7 @@ export default async function ExplorarPage() {
           <Link href="/" className="text-xl font-bold text-gray-900 tracking-tight">
             turistech
           </Link>
-          <Link href="/explorar" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
+          <Link href="/explorar" className="text-sm text-gray-500 hover:text-gray-900 transition-colors hidden md:block">
             Explorar destinos
           </Link>
         </div>
@@ -36,6 +42,7 @@ export default async function ExplorarPage() {
         <ExplorarClient
           municipios={municipios || []}
           atrativos={atrativos || []}
+          roteiros={roteiros || []}
           estados={estados}
           categorias={categorias}
         />
