@@ -40,7 +40,7 @@ export default function AuthButton() {
 
   if (loading) return null
 
-  if (user) {
+    if (user) {
     return (
       <div className="flex items-center gap-3">
         <Link
@@ -49,6 +49,14 @@ export default function AuthButton() {
         >
           Meus roteiros
         </Link>
+        {user.email === 'renanriado@gmail.com' && (
+          <Link
+            href="/admin"
+            className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+          >
+            Admin
+          </Link>
+        )}
         <span className="text-gray-300">|</span>
         <span className="text-sm text-gray-500 hidden md:block">
           {user.user_metadata?.name?.split(' ')[0] || 'Minha conta'}
