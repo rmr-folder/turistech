@@ -2,6 +2,7 @@ import { supabase } from '../../../lib/supabase'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import AdicionarAoRoteiro from '../../components/AdicionarAoRoteiro'
+import EventoAtrativo from '../../components/EventoAtrativo'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -20,6 +21,7 @@ export default async function AtrativoPage({ params }: Props) {
 
   return (
     <main className="min-h-screen bg-white">
+      <EventoAtrativo atrativoId={atrativo.id} atrativoNome={atrativo.nome} />
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white border-b border-gray-100 px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center gap-4">

@@ -1,6 +1,7 @@
 import { supabase } from '../../../lib/supabase'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import EventoMunicipio from '../../components/EventoMunicipio'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -19,6 +20,7 @@ export default async function MunicipioPage({ params }: Props) {
 
   return (
     <main className="min-h-screen bg-white">
+      <EventoMunicipio municipioId={municipio.id} municipioNome={municipio.nome} />
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white border-b border-gray-100 px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center gap-4">

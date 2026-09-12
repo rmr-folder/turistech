@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { registrarEvento } from '../../lib/eventos'
 
 interface Atrativo {
   id: string
@@ -86,6 +87,9 @@ export default function ExplorarClient({ municipios, atrativos, roteiros, estado
           onChange={(e) => {
             setBusca(e.target.value)
             setTipoSelecionado('')
+            if (e.target.value.length > 2) {
+            registrarEvento('busca', 'explorar', undefined, { termo: e.target.value })
+            }
           }}
           className="w-full border border-gray-200 rounded-2xl px-5 py-4 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 text-lg"
         />
