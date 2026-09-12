@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '../../lib/supabase-browser'
-import Link from 'next/link'
 
 export default function AuthButton() {
   const [user, setUser] = useState<any>(null)
@@ -17,19 +16,17 @@ export default function AuthButton() {
     }
     getUser()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
     })
 
-    return () => subscription.unsubscribe()
+    return () => authListener.subscription.unsubscribe()
   }, [])
 
   const handleLoginGoogle = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`
-      }
+      options: { redirectTo: `${window.location.origin}/auth/callback` }
     })
   }
 
@@ -40,31 +37,11 @@ export default function AuthButton() {
 
   if (loading) return null
 
-    if (user) {
+  if (user) {
     return (
-      <div className="flex items-center gap-3">
-        <Link
-          href="/meus-roteiros"
-          className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
-        >
-          Meus roteiros
-        </Link>
-        {user.email === 'renanriado@gmail.com' && (
-          <Link
-            href="/admin"
-            className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
-          >
-            Admin
-          </Link>
-        )}
-        <span className="text-gray-300">|</span>
-        <span className="text-sm text-gray-500 hidden md:block">
-          {user.user_metadata?.name?.split(' ')[0] || 'Minha conta'}
-        </span>
-        <button
-          onClick={handleLogout}
-          className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
-        >
+      <div className="hidden md:flex items-center gap-4">
+        <span className="text-sm text-gray-500">{user.user_metadata?.name?.split(' ')[0]}</span>
+        <button onClick={handleLogout} className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
           Sair
         </button>
       </div>
@@ -74,7 +51,7 @@ export default function AuthButton() {
   return (
     <button
       onClick={handleLoginGoogle}
-      className="text-sm bg-gray-900 text-white px-4 py-2 rounded-full hover:bg-gray-700 transition-colors"
+      className="hidden md:block text-sm bg-gray-900 text-white px-4 py-2 rounded-full hover:bg-gray-700 transition-colors"
     >
       Entrar
     </button>
