@@ -12,22 +12,22 @@ export default async function Home() {
   return (
     <main className="min-h-screen bg-white">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-100 px-6 py-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <Link href="/" className="text-xl font-bold text-gray-900 tracking-tight">
-            turistech
-          </Link>
-          <div className="flex items-center gap-6">
-            <Link href="/roteiros" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
-            Roteiros
-            </Link>
-            <Link href="/explorar" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
-            Explorar
-            </Link>
-            <AuthButton />
-          </div>
-        </div>
-      </header>
+        <header className="sticky top-0 z-50 bg-white border-b border-gray-100 px-6 py-4">
+  <div className="max-w-6xl mx-auto flex items-center justify-between">
+    <Link href="/" className="text-xl font-bold text-gray-900 tracking-tight">
+      turistech
+    </Link>
+    <div className="header-nav flex items-center gap-6">
+      <Link href="/roteiros" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
+        Roteiros
+      </Link>
+      <Link href="/explorar" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
+        Explorar
+      </Link>
+      <AuthButton />
+    </div>
+  </div>
+</header>
 
       {/* Hero */}
       <div className="max-w-6xl mx-auto px-6 pt-16 pb-12">
