@@ -2,6 +2,8 @@ import { supabase } from '../../../lib/supabase'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import EventoMunicipio from '../../components/EventoMunicipio'
+import AdminEditButton from '../../components/AdminEditButton'
+
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -32,6 +34,7 @@ export default async function MunicipioPage({ params }: Props) {
 
       {/* Hero */}
       <div className="relative h-96 bg-gray-100">
+        <AdminEditButton href={`/admin/municipios?edit=${municipio.id}`} />
         {municipio.foto_capa && (
           <img
             src={municipio.foto_capa}

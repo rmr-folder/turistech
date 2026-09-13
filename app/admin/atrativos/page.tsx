@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 
 const ADMIN_EMAIL = 'renanriado@gmail.com'
 const CATEGORIAS = ['Praia', 'Cachoeira', 'Trilha', 'Mirante', 'Parque', 'Gruta', 'Rio', 'Lago', 'Mergulho', 'Natureza', 'Atrativo Cultural']
@@ -18,6 +19,7 @@ export default function AdminAtrativos() {
     nome: '', slug: '', descricao: '', categoria: '', municipio_id: '', foto_capa: ''
   })
   const supabase = createClient()
+  const searchParams = useSearchParams()
 
   useEffect(() => {
     const init = async () => {
@@ -30,6 +32,14 @@ export default function AdminAtrativos() {
     }
     init()
   }, [])
+
+  useEffect(() => {
+    const editId = searchParams.get('edit')
+    if (editId && atrativos.length > 0) {
+      const item = atrativos.find((a) => a.id === editId)
+      if (item) setEditando({ ...item, municipio_id: item.municipio_id })
+    }
+  }, [atrativos, searchParams])
 
   const carregarMunicipios = async () => {
     const { data } = await supabase.from('municipios').select('id, nome, estado').order('nome')

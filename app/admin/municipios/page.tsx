@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
+
 
 const ADMIN_EMAIL = 'renanriado@gmail.com'
 
@@ -16,6 +18,7 @@ export default function AdminMunicipios() {
     nome: '', estado: '', slug: '', descricao: '', foto_capa: ''
   })
   const supabase = createClient()
+  const searchParams = useSearchParams()
 
   useEffect(() => {
     const init = async () => {
@@ -28,6 +31,14 @@ export default function AdminMunicipios() {
     }
     init()
   }, [])
+
+  useEffect(() => {
+    const editId = searchParams.get('edit')
+    if (editId && municipios.length > 0) {
+      const item = municipios.find((m) => m.id === editId)
+      if (item) handleEditar(item)
+    }
+  }, [municipios, searchParams])
 
   const carregarMunicipios = async () => {
     const { data } = await supabase.from('municipios').select('*').order('nome')

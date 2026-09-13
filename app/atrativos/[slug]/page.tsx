@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import AdicionarAoRoteiro from '../../components/AdicionarAoRoteiro'
 import EventoAtrativo from '../../components/EventoAtrativo'
+import AdminEditButton from '../../components/AdminEditButton'
+
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -44,6 +46,7 @@ export default async function AtrativoPage({ params }: Props) {
 
       {/* Hero */}
       <div className="relative h-96 bg-gray-100">
+        <AdminEditButton href={`/admin/atrativos?edit=${atrativo.id}`} />
         {atrativo.foto_capa && (
           <img
             src={atrativo.foto_capa}
