@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
@@ -8,7 +8,7 @@ import { useSearchParams } from 'next/navigation'
 const ADMIN_EMAIL = 'renanriado@gmail.com'
 const CATEGORIAS = ['Praia', 'Cachoeira', 'Trilha', 'Mirante', 'Parque', 'Gruta', 'Rio', 'Lago', 'Mergulho', 'Natureza', 'Atrativo Cultural']
 
-export default function AdminAtrativos() {
+function AdminAtrativosContent() {
   const [municipios, setMunicipios] = useState<any[]>([])
   const [atrativos, setAtrativos] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -355,5 +355,13 @@ export default function AdminAtrativos() {
         </div>
       </div>
     </main>
+  )
+}
+
+export default function AdminAtrativos() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><p className="text-gray-400">Carregando...</p></div>}>
+      <AdminAtrativosContent />
+    </Suspense>
   )
 }

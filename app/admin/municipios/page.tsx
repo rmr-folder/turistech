@@ -1,14 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 
-
 const ADMIN_EMAIL = 'renanriado@gmail.com'
 
-export default function AdminMunicipios() {
+function AdminMunicipiosContent() {
   const [municipios, setMunicipios] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [salvando, setSalvando] = useState(false)
@@ -336,5 +335,13 @@ export default function AdminMunicipios() {
         </div>
       </div>
     </main>
+  )
+}
+
+export default function AdminMunicipios() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><p className="text-gray-400">Carregando...</p></div>}>
+      <AdminMunicipiosContent />
+    </Suspense>
   )
 }
