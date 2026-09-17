@@ -17,9 +17,11 @@ export default async function RoteirosPage() {
           <Link href="/" className="text-xl font-bold text-gray-900 tracking-tight">
             turistech
           </Link>
-          <Link href="/explorar" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
-            Explorar destinos
-          </Link>
+          <div id="desktop-nav" style={{display: 'none'}} className="items-center gap-2">
+            <Link href="/explorar" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
+              Explorar destinos
+            </Link>
+          </div>
         </div>
       </header>
 
