@@ -3,8 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '../../lib/supabase-browser'
-
-const ADMIN_EMAIL = 'renanriado@gmail.com'
+import { isAdmin } from '../../lib/admin'
 
 export default function AccountPanel() {
   const [user, setUser] = useState<any>(null)
@@ -106,7 +105,7 @@ export default function AccountPanel() {
             </div>
 
             <div className="space-y-3">
-              {user.email === ADMIN_EMAIL && (
+              {isAdmin(user.email) && (
                 <Link
                   href="/admin"
                   className="flex items-center justify-between bg-gray-900 text-white rounded-2xl p-4"

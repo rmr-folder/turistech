@@ -3,26 +3,25 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '../../lib/supabase-browser'
 import Link from 'next/link'
-
-const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL
+import { isAdmin } from '../../lib/admin'
 
 interface Props {
   href: string
 }
 
 export default function AdminEditButton({ href }: Props) {
-  const [isAdmin, setIsAdmin] = useState(false)
+  const [ehAdmin, setEhAdmin] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
     const check = async () => {
       const { data: { user } } = await supabase.auth.getUser()
-      if (user?.email === ADMIN_EMAIL) setIsAdmin(true)
+      if (isAdmin(user?.email)) setEhAdmin(true)
     }
     check()
   }, [])
 
-  if (!isAdmin) return null
+  if (!ehAdmin) return null
 
   return (
     <Link

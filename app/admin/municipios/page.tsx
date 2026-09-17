@@ -4,8 +4,7 @@ import { useEffect, useState, Suspense } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-
-const ADMIN_EMAIL = 'renanriado@gmail.com'
+import { isAdmin } from '../../../lib/admin'
 
 function AdminMunicipiosContent() {
   const [municipios, setMunicipios] = useState<any[]>([])
@@ -22,7 +21,7 @@ function AdminMunicipiosContent() {
   useEffect(() => {
     const init = async () => {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user || user.email !== ADMIN_EMAIL) {
+      if (!user || !isAdmin(user.email)) {
         window.location.href = '/'
         return
       }
@@ -138,7 +137,7 @@ function AdminMunicipiosContent() {
 
         {/* Modal de edição */}
         {editando && (
-          <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+          <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center">
             <div className="absolute inset-0 bg-black/40" onClick={() => setEditando(null)} />
             <div className="relative bg-white rounded-t-3xl md:rounded-3xl w-full md:max-w-2xl p-6 z-10 max-h-[90vh] overflow-y-auto">
               <h2 className="text-lg font-semibold text-gray-900 mb-6">Editar municipio</h2>

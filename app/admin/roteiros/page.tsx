@@ -3,8 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import Link from 'next/link'
-
-const ADMIN_EMAIL = 'renanriado@gmail.com'
+import { isAdmin } from '../../../lib/admin'
 
 export default function AdminRoteiros() {
   const [atrativos, setAtrativos] = useState<any[]>([])
@@ -21,7 +20,7 @@ export default function AdminRoteiros() {
   useEffect(() => {
     const init = async () => {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user || user.email !== ADMIN_EMAIL) {
+      if (!user || !isAdmin(user.email)) {
         window.location.href = '/'
         return
       }
