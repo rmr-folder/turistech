@@ -117,7 +117,7 @@ export default function AdicionarAoRoteiro({ atrativoId, atrativoNome }: Props) 
       </button>
 
       {aberto && (
-        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+        <div className="fixed inset-0 z-[60]] flex items-end md:items-center justify-center">
           <div className="absolute inset-0 bg-black/40" onClick={() => setAberto(false)} />
           <div className="relative bg-white rounded-t-3xl md:rounded-3xl w-full md:max-w-md p-6 z-10">
             <h3 className="text-lg font-semibold text-gray-900 mb-1">Adicionar ao roteiro</h3>

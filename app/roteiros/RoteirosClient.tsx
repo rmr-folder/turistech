@@ -264,7 +264,7 @@ export default function RoteirosClient({ roteirosPublicos }: Props) {
               </p>
 
               {criandoNovo && (
-                <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+                <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center">
                   <div className="absolute inset-0 bg-black/40" onClick={() => setCriandoNovo(false)} />
                   <div className="relative bg-white rounded-t-3xl md:rounded-3xl w-full md:max-w-md p-6 z-10">
                     <h2 className="text-lg font-semibold text-gray-900 mb-6">Novo roteiro</h2>
