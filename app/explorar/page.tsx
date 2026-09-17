@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { supabase } from '../../lib/supabase'
 import ExplorarClient from './ExplorarClient'
+import AccountPanel from '../components/AccountPanel'
 
 export const revalidate = 0
 
@@ -29,9 +30,14 @@ export default async function ExplorarPage() {
           <Link href="/" className="text-xl font-bold text-gray-900 tracking-tight">
             turistech
           </Link>
-          <Link href="/explorar" className="text-sm text-gray-500 hover:text-gray-900 transition-colors hidden md:block">
-            Explorar destinos
-          </Link>
+          <div className="flex items-center gap-3">
+            <div id="desktop-nav" style={{display: 'none'}} className="items-center gap-2">
+              <Link href="/roteiros" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
+                Roteiros
+              </Link>
+            </div>
+            <AccountPanel />
+          </div>
         </div>
       </header>
 

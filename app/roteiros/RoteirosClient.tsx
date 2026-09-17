@@ -9,15 +9,54 @@ interface Props {
 }
 
 export default function RoteirosClient({ roteirosPublicos }: Props) {
-  const [aba, setAba] = useState<'descobrir' | 'meus'>('descobrir')
+  const [aba, setAba] = useState<'descobrir' | 'meus' | 'salvos'>('descobrir')
   const [user, setUser] = useState<any>(null)
   const [checandoUser, setCheckandoUser] = useState(true)
   const [meusRoteiros, setMeusRoteiros] = useState<any[]>([])
   const [carregandoMeus, setCarregandoMeus] = useState(false)
   const [jaCarregouMeus, setJaCarregouMeus] = useState(false)
+  const [roteirosSalvos, setRoteirosSalvos] = useState<any[]>([])
+  const [carregandoSalvos, setCarregandoSalvos] = useState(false)
+  const [jaCarregouSalvos, setJaCarregouSalvos] = useState(false)
   const [deletando, setDeletando] = useState('')
-  const [copiado, setCopiado] = useState('')
+    const [copiado, setCopiado] = useState('')
+  const [criandoNovo, setCriandoNovo] = useState(false)
+  const [salvandoNovo, setSalvandoNovo] = useState(false)
+  const [novoRoteiro, setNovoRoteiro] = useState({ titulo: '', duracao_dias: '', publico: false })
   const supabase = createClient()
+
+  const gerarSlug = (nome: string) => {
+    return nome
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '')
+  }
+
+  const handleCriarRoteiro = async () => {
+    if (!novoRoteiro.titulo || !user) return
+    setSalvandoNovo(true)
+    const slugBase = gerarSlug(novoRoteiro.titulo)
+    const { data, error } = await supabase
+      .from('roteiros')
+      .insert({
+        titulo: novoRoteiro.titulo,
+        slug: `${slugBase}-${Date.now().toString().slice(-5)}`,
+        duracao_dias: novoRoteiro.duracao_dias ? Number(novoRoteiro.duracao_dias) : null,
+        publico: novoRoteiro.publico,
+        user_id: user.id,
+      })
+      .select()
+      .single()
+
+    if (!error && data) {
+      setMeusRoteiros([{ ...data, roteiro_atrativos: [] }, ...meusRoteiros])
+      setNovoRoteiro({ titulo: '', duracao_dias: '', publico: false })
+      setCriandoNovo(false)
+    }
+    setSalvandoNovo(false)
+  }
 
   useEffect(() => {
     const getUser = async () => {
@@ -31,6 +70,9 @@ export default function RoteirosClient({ roteirosPublicos }: Props) {
   useEffect(() => {
     if (aba === 'meus' && user && !jaCarregouMeus) {
       carregarMeusRoteiros(user.id)
+    }
+    if (aba === 'salvos' && user && !jaCarregouSalvos) {
+      carregarSalvos(user.id)
     }
   }, [aba, user])
 
@@ -57,6 +99,28 @@ export default function RoteirosClient({ roteirosPublicos }: Props) {
     setMeusRoteiros(data || [])
     setCarregandoMeus(false)
     setJaCarregouMeus(true)
+  }
+
+  const carregarSalvos = async (userId: string) => {
+    setCarregandoSalvos(true)
+    const { data } = await supabase
+      .from('roteiros_salvos')
+      .select('id, roteiros(*, roteiro_atrativos(id, atrativos(id, nome, slug, foto_capa, categoria)))')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+
+    setRoteirosSalvos(
+      (data || [])
+        .filter((item: any) => item.roteiros)
+        .map((item: any) => ({ ...item.roteiros, salvoId: item.id }))
+    )
+    setCarregandoSalvos(false)
+    setJaCarregouSalvos(true)
+  }
+
+  const handleRemoverSalvo = async (salvoId: string) => {
+    await supabase.from('roteiros_salvos').delete().eq('id', salvoId)
+    setRoteirosSalvos(roteirosSalvos.filter((r) => r.salvoId !== salvoId))
   }
 
   const handleLoginGoogle = async () => {
@@ -119,6 +183,14 @@ export default function RoteirosClient({ roteirosPublicos }: Props) {
         >
           Meus roteiros
         </button>
+        <button
+          onClick={() => setAba('salvos')}
+          className={`text-sm font-medium px-4 py-2 rounded-full transition-colors ${
+            aba === 'salvos' ? 'bg-gray-900 text-white' : 'text-gray-500 hover:bg-gray-100'
+          }`}
+        >
+          Salvos
+        </button>
       </div>
 
       {aba === 'descobrir' && (
@@ -178,10 +250,73 @@ export default function RoteirosClient({ roteirosPublicos }: Props) {
             </div>
           ) : (
             <>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">Meus Roteiros</h1>
+                            <div className="flex items-center justify-between mb-2">
+                <h1 className="text-4xl font-bold text-gray-900">Meus Roteiros</h1>
+                <button
+                  onClick={() => setCriandoNovo(true)}
+                  className="text-sm bg-gray-900 text-white px-4 py-2 rounded-full hover:bg-gray-700 transition-colors flex-shrink-0"
+                >
+                  + Novo roteiro
+                </button>
+              </div>
               <p className="text-gray-500 mb-10">
                 Olá, {user.user_metadata?.name?.split(' ')[0]}! Aqui estão seus roteiros personalizados.
               </p>
+
+              {criandoNovo && (
+                <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+                  <div className="absolute inset-0 bg-black/40" onClick={() => setCriandoNovo(false)} />
+                  <div className="relative bg-white rounded-t-3xl md:rounded-3xl w-full md:max-w-md p-6 z-10">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-6">Novo roteiro</h2>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1">Nome do roteiro</label>
+                        <input
+                          type="text"
+                          value={novoRoteiro.titulo}
+                          onChange={(e) => setNovoRoteiro({ ...novoRoteiro, titulo: e.target.value })}
+                          placeholder="Ex: Fim de semana em Ilhabela"
+                          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1">Duração (dias)</label>
+                        <input
+                          type="number"
+                          min={1}
+                          value={novoRoteiro.duracao_dias}
+                          onChange={(e) => setNovoRoteiro({ ...novoRoteiro, duracao_dias: e.target.value })}
+                          placeholder="Ex: 3"
+                          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                        />
+                      </div>
+                      <label className="flex items-center gap-2 text-sm text-gray-600">
+                        <input
+                          type="checkbox"
+                          checked={novoRoteiro.publico}
+                          onChange={(e) => setNovoRoteiro({ ...novoRoteiro, publico: e.target.checked })}
+                        />
+                        Tornar público (outras pessoas podem ver)
+                      </label>
+                      <div className="flex gap-3 pt-2">
+                        <button
+                          onClick={handleCriarRoteiro}
+                          disabled={salvandoNovo || !novoRoteiro.titulo}
+                          className="flex-1 py-3 bg-gray-900 text-white rounded-xl text-sm font-medium hover:bg-gray-700 transition-colors disabled:opacity-50"
+                        >
+                          {salvandoNovo ? 'Criando...' : 'Criar roteiro'}
+                        </button>
+                        <button
+                          onClick={() => setCriandoNovo(false)}
+                          className="px-6 py-3 border border-gray-200 rounded-xl text-sm text-gray-600 hover:border-gray-400 transition-colors"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {carregandoMeus ? (
                 <p className="text-gray-400 text-center py-20">Carregando...</p>
@@ -268,6 +403,82 @@ export default function RoteirosClient({ roteirosPublicos }: Props) {
                           </button>
                         </div>
                       </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </>
+      )}
+
+      {aba === 'salvos' && (
+        <>
+          {checandoUser ? (
+            <p className="text-gray-400 text-center py-20">Carregando...</p>
+          ) : !user ? (
+            <div className="text-center py-20">
+              <p className="text-gray-500 mb-6">Entre para ver os roteiros que você salvou.</p>
+              <button
+                onClick={handleLoginGoogle}
+                className="text-sm bg-gray-900 text-white px-6 py-3 rounded-full hover:bg-gray-700 transition-colors"
+              >
+                Entrar com Google
+              </button>
+            </div>
+          ) : (
+            <>
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">Roteiros salvos</h1>
+              <p className="text-gray-500 mb-10">Roteiros de outras pessoas que você guardou pra depois</p>
+
+              {carregandoSalvos ? (
+                <p className="text-gray-400 text-center py-20">Carregando...</p>
+              ) : roteirosSalvos.length === 0 ? (
+                <div className="text-center py-20">
+                  <p className="text-gray-400 mb-4">Você ainda não salvou nenhum roteiro.</p>
+                  <button
+                    onClick={() => setAba('descobrir')}
+                    className="text-sm bg-gray-900 text-white px-6 py-3 rounded-full hover:bg-gray-700 transition-colors"
+                  >
+                    Descobrir roteiros
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {roteirosSalvos.map((roteiro) => (
+                    <div key={roteiro.salvoId} className="group relative">
+                      <button
+                        onClick={() => handleRemoverSalvo(roteiro.salvoId)}
+                        className="absolute top-3 right-3 z-10 bg-white/90 hover:bg-white text-gray-900 rounded-full p-2 shadow-md transition-colors"
+                        title="Remover dos salvos"
+                      >
+                        ✕
+                      </button>
+                      <Link href={`/roteiros/${roteiro.slug}`}>
+                        <div className="relative h-52 rounded-2xl overflow-hidden bg-gray-100 mb-4">
+                          {roteiro.foto_capa ? (
+                            <img
+                              src={roteiro.foto_capa}
+                              alt={roteiro.titulo}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                              <span className="text-4xl">🗺️</span>
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                          {roteiro.duracao_dias && (
+                            <span className="absolute bottom-3 left-3 text-xs font-medium text-white bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full">
+                              {roteiro.duracao_dias} {roteiro.duracao_dias === 1 ? 'dia' : 'dias'}
+                            </span>
+                          )}
+                        </div>
+                        <p className="font-semibold text-gray-900">{roteiro.titulo}</p>
+                        {roteiro.descricao && (
+                          <p className="text-sm text-gray-400 mt-1 line-clamp-2">{roteiro.descricao}</p>
+                        )}
+                      </Link>
                     </div>
                   ))}
                 </div>

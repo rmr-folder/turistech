@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { supabase } from '../../../lib/supabase'
 import { notFound } from 'next/navigation'
+import SalvarRoteiroButton from '../../components/SalvarRoteiroButton'
+
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -42,6 +44,9 @@ export default async function RoteiroPage({ params }: Props) {
 
       {/* Hero */}
       <div className="relative h-80 bg-gray-100">
+        <div className="absolute top-4 right-4 z-10">
+          <SalvarRoteiroButton roteiroId={roteiro.id} />
+        </div>
         {roteiro.foto_capa ? (
           <img
             src={roteiro.foto_capa}
