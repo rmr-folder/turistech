@@ -18,6 +18,6 @@ export async function registrarEvento(
       metadata,
     })
   } catch (e) {
-    // Silencioso — não interrompe a experiência do usuário
+    // Silencioso - nao interrompe a experiencia do usuario
   }
 }

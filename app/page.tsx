@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { supabase } from '../lib/supabase'
-import AuthButton from './components/AuthButton'
+import AccountPanel from './components/AccountPanel'
 
 export const revalidate = 0
 
@@ -12,24 +12,24 @@ export default async function Home() {
   return (
     <main className="min-h-screen bg-white">
       {/* Header */}
-<header className="sticky top-0 z-50 bg-white border-b border-gray-100 px-6 py-4">
-  <div className="max-w-6xl mx-auto flex items-center justify-between">
-    <Link href="/" className="text-xl font-bold text-gray-900 tracking-tight">
-      turistech
-    </Link>
-    <div style={{display: 'none'}} id="desktop-nav" className="items-center gap-2">
-      <Link href="/roteiros" className="flex items-center gap-2 px-4 py-2 rounded-full text-sm text-gray-600 hover:bg-gray-100 transition-colors">
-        Roteiros
-      </Link>
-      <Link href="/explorar" className="flex items-center gap-2 px-4 py-2 rounded-full text-sm text-gray-600 hover:bg-gray-100 transition-colors">
-        Explorar
-      </Link>
-      <Link href="/minha-conta" className="flex items-center gap-2 px-4 py-2 rounded-full text-sm text-gray-600 hover:bg-gray-100 transition-colors">
-        Conta
-      </Link>
-    </div>
-  </div>
-</header>
+      <header className="sticky top-0 z-50 bg-white border-b border-gray-100 px-6 py-4">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <Link href="/" className="text-xl font-bold text-gray-900 tracking-tight">
+            turistech
+          </Link>
+          <div className="flex items-center gap-3">
+            <div style={{display: 'none'}} id="desktop-nav" className="items-center gap-2">
+              <Link href="/roteiros" className="flex items-center gap-2 px-4 py-2 rounded-full text-sm text-gray-600 hover:bg-gray-100 transition-colors">
+                Roteiros
+              </Link>
+              <Link href="/explorar" className="flex items-center gap-2 px-4 py-2 rounded-full text-sm text-gray-600 hover:bg-gray-100 transition-colors">
+                Explorar
+              </Link>
+            </div>
+            <AccountPanel />
+          </div>
+        </div>
+      </header>
 
       {/* Hero */}
       <div className="max-w-6xl mx-auto px-6 pt-16 pb-12">
