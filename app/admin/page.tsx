@@ -3,11 +3,12 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '../../lib/supabase-browser'
 import Link from 'next/link'
-import { isAdmin } from '../../lib/admin'
+import { isAdmin, isMasterAdmin } from '../../lib/admin'
 
 export default function AdminPage() {
   const [user, setUser] = useState<any>(null)
   const [ehAdmin, setEhAdmin] = useState(false)
+  const [ehMaster, setEhMaster] = useState(false)
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
@@ -16,6 +17,7 @@ export default function AdminPage() {
       const { data: { user } } = await supabase.auth.getUser()
       setUser(user)
       setEhAdmin(await isAdmin(user?.email))
+      setEhMaster(await isMasterAdmin(user?.email))
       setLoading(false)
     }
     init()
@@ -47,6 +49,7 @@ export default function AdminPage() {
     { href: '/admin/municipios', label: 'Municípios', emoji: '🏙️', descricao: 'Adicionar e editar municípios' },
     { href: '/admin/atrativos', label: 'Atrativos', emoji: '📍', descricao: 'Adicionar e editar atrativos' },
     { href: '/admin/roteiros', label: 'Roteiros', emoji: '🗺️', descricao: 'Criar e editar roteiros curados' },
+    ...(ehMaster ? [{ href: '/admin/administradores', label: 'Administradores', emoji: '🔑', descricao: 'Gerenciar quem tem acesso admin' }] : []),
   ]
 
   return (
