@@ -30,7 +30,7 @@ function AdminAtrativosContent() {
         window.location.href = '/'
         return
       }
-      setAdminEmail(user.email)
+      setAdminEmail(user.email ?? '')
       await Promise.all([carregarMunicipios(), carregarAtrativos()])
     }
     init()
