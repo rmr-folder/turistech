@@ -26,7 +26,7 @@ export default function AdminRoteiros() {
         window.location.href = '/'
         return
       }
-      setAdminEmail(user.email)
+      setAdminEmail(user.email ?? '')
       await Promise.all([carregarAtrativos(), carregarRoteiros()])
     }
     init()

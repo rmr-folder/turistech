@@ -27,7 +27,7 @@ function AdminMunicipiosContent() {
         window.location.href = '/'
         return
       }
-      setAdminEmail(user.email)
+      setAdminEmail(user.email ?? '')
       await carregarMunicipios()
     }
     init()
