@@ -9,18 +9,21 @@ export default function AccountPanel() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [aberto, setAberto] = useState(false)
+  const [ehAdmin, setEhAdmin] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       setUser(user)
+      setEhAdmin(await isAdmin(user?.email))
       setLoading(false)
     }
     getUser()
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null)
+      setEhAdmin(await isAdmin(session?.user?.email))
     })
 
     return () => authListener.subscription.unsubscribe()
@@ -105,7 +108,7 @@ export default function AccountPanel() {
             </div>
 
             <div className="space-y-3">
-              {isAdmin(user.email) && (
+              {ehAdmin && (
                 <Link
                   href="/admin"
                   className="flex items-center justify-between bg-gray-900 text-white rounded-2xl p-4"

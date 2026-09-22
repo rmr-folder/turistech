@@ -24,7 +24,7 @@ function AdminAtrativosContent() {
   useEffect(() => {
     const init = async () => {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user || !isAdmin(user.email)) {
+      if (!user || !(await isAdmin(user.email))) {
         window.location.href = '/'
         return
       }

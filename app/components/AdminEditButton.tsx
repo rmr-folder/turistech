@@ -16,7 +16,7 @@ export default function AdminEditButton({ href }: Props) {
   useEffect(() => {
     const check = async () => {
       const { data: { user } } = await supabase.auth.getUser()
-      if (isAdmin(user?.email)) setEhAdmin(true)
+      setEhAdmin(await isAdmin(user?.email))
     }
     check()
   }, [])

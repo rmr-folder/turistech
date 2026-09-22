@@ -3,10 +3,11 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '../../lib/supabase-browser'
 import Link from 'next/link'
-import { isAdmin, ADMIN_EMAILS } from '../../lib/admin'
+import { isAdmin } from '../../lib/admin'
 
 export default function AdminPage() {
   const [user, setUser] = useState<any>(null)
+  const [ehAdmin, setEhAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
@@ -14,6 +15,7 @@ export default function AdminPage() {
     const init = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       setUser(user)
+      setEhAdmin(await isAdmin(user?.email))
       setLoading(false)
     }
     init()
@@ -27,13 +29,12 @@ export default function AdminPage() {
     )
   }
 
-  if (!user || !isAdmin(user.email)) {
+  if (!user || !ehAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-900 font-semibold mb-2">Acesso restrito</p>
           <p className="text-gray-400 text-sm mb-6">Email: {user?.email || 'não logado'}</p>
-          <p className="text-gray-400 text-sm mb-6">Admins: {ADMIN_EMAILS.join(', ')}</p>
           <Link href="/" className="text-sm bg-gray-900 text-white px-6 py-3 rounded-full">
             Voltar ao início
           </Link>
