@@ -5,6 +5,7 @@ import { createClient } from '../../../lib/supabase-browser'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { isAdmin } from '../../../lib/admin'
+import { registrarLogAdmin } from '../../../lib/adminLog'
 
 function AdminMunicipiosContent() {
   const [municipios, setMunicipios] = useState<any[]>([])
@@ -12,6 +13,7 @@ function AdminMunicipiosContent() {
   const [salvando, setSalvando] = useState(false)
   const [uploadando, setUploadando] = useState(false)
   const [editando, setEditando] = useState<any>(null)
+  const [adminEmail, setAdminEmail] = useState('')
   const [form, setForm] = useState({
     nome: '', estado: '', slug: '', descricao: '', foto_capa: ''
   })
@@ -25,6 +27,7 @@ function AdminMunicipiosContent() {
         window.location.href = '/'
         return
       }
+      setAdminEmail(user.email)
       await carregarMunicipios()
     }
     init()
@@ -77,11 +80,12 @@ function AdminMunicipiosContent() {
   const handleSalvar = async () => {
     if (!form.nome || !form.estado || !form.slug) return
     setSalvando(true)
-    const { error } = await supabase.from('municipios').insert({
+    const { data, error } = await supabase.from('municipios').insert({
       nome: form.nome, estado: form.estado, slug: form.slug,
       descricao: form.descricao, foto_capa: form.foto_capa,
-    })
+    }).select().single()
     if (!error) {
+      await registrarLogAdmin(adminEmail, 'criar', 'municipios', data.id, { nome: form.nome })
       setForm({ nome: '', estado: '', slug: '', descricao: '', foto_capa: '' })
       await carregarMunicipios()
     }
@@ -106,6 +110,7 @@ function AdminMunicipiosContent() {
       })
       .eq('id', editando.id)
     if (!error) {
+      await registrarLogAdmin(adminEmail, 'editar', 'municipios', editando.id, { nome: editando.nome })
       setEditando(null)
       await carregarMunicipios()
     }
@@ -114,7 +119,9 @@ function AdminMunicipiosContent() {
 
   const handleDeletar = async (id: string) => {
     if (!confirm('Deletar este municipio?')) return
+    const municipio = municipios.find(m => m.id === id)
     await supabase.from('municipios').delete().eq('id', id)
+    await registrarLogAdmin(adminEmail, 'deletar', 'municipios', id, { nome: municipio?.nome })
     setMunicipios(municipios.filter(m => m.id !== id))
   }
 

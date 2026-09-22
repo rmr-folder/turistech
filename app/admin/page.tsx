@@ -49,6 +49,7 @@ export default function AdminPage() {
     { href: '/admin/municipios', label: 'Municípios', emoji: '🏙️', descricao: 'Adicionar e editar municípios' },
     { href: '/admin/atrativos', label: 'Atrativos', emoji: '📍', descricao: 'Adicionar e editar atrativos' },
     { href: '/admin/roteiros', label: 'Roteiros', emoji: '🗺️', descricao: 'Criar e editar roteiros curados' },
+    { href: '/admin/logs', label: 'Registro de edições', emoji: '📋', descricao: 'Ver o histórico de alterações' },
     ...(ehMaster ? [{ href: '/admin/administradores', label: 'Administradores', emoji: '🔑', descricao: 'Gerenciar quem tem acesso admin' }] : []),
   ]
 

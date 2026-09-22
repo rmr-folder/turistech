@@ -5,6 +5,7 @@ import { createClient } from '../../../lib/supabase-browser'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { isAdmin } from '../../../lib/admin'
+import { registrarLogAdmin } from '../../../lib/adminLog'
 
 const CATEGORIAS = ['Praia', 'Cachoeira', 'Trilha', 'Mirante', 'Parque', 'Gruta', 'Rio', 'Lago', 'Mergulho', 'Natureza', 'Atrativo Cultural']
 
@@ -15,6 +16,7 @@ function AdminAtrativosContent() {
   const [salvando, setSalvando] = useState(false)
   const [uploadando, setUploadando] = useState(false)
   const [editando, setEditando] = useState<any>(null)
+  const [adminEmail, setAdminEmail] = useState('')
   const [form, setForm] = useState({
     nome: '', slug: '', descricao: '', categoria: '', municipio_id: '', foto_capa: ''
   })
@@ -28,6 +30,7 @@ function AdminAtrativosContent() {
         window.location.href = '/'
         return
       }
+      setAdminEmail(user.email)
       await Promise.all([carregarMunicipios(), carregarAtrativos()])
     }
     init()
@@ -83,12 +86,13 @@ function AdminAtrativosContent() {
   const handleSalvar = async () => {
     if (!form.nome || !form.categoria || !form.municipio_id) return
     setSalvando(true)
-    const { error } = await supabase.from('atrativos').insert({
+    const { data, error } = await supabase.from('atrativos').insert({
       nome: form.nome, slug: form.slug || gerarSlug(form.nome),
       descricao: form.descricao, categoria: form.categoria,
       municipio_id: form.municipio_id, foto_capa: form.foto_capa,
-    })
+    }).select().single()
     if (!error) {
+      await registrarLogAdmin(adminEmail, 'criar', 'atrativos', data.id, { nome: form.nome })
       setForm({ nome: '', slug: '', descricao: '', categoria: '', municipio_id: '', foto_capa: '' })
       await carregarAtrativos()
     }
@@ -107,6 +111,7 @@ function AdminAtrativosContent() {
       })
       .eq('id', editando.id)
     if (!error) {
+      await registrarLogAdmin(adminEmail, 'editar', 'atrativos', editando.id, { nome: editando.nome })
       setEditando(null)
       await carregarAtrativos()
     }
@@ -115,7 +120,9 @@ function AdminAtrativosContent() {
 
   const handleDeletar = async (id: string) => {
     if (!confirm('Deletar este atrativo?')) return
+    const atrativo = atrativos.find(a => a.id === id)
     await supabase.from('atrativos').delete().eq('id', id)
+    await registrarLogAdmin(adminEmail, 'deletar', 'atrativos', id, { nome: atrativo?.nome })
     setAtrativos(atrativos.filter(a => a.id !== id))
   }
 

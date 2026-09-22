@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '../../../lib/supabase-browser'
 import Link from 'next/link'
 import { isAdmin } from '../../../lib/admin'
+import { registrarLogAdmin } from '../../../lib/adminLog'
 
 export default function AdminRoteiros() {
   const [atrativos, setAtrativos] = useState<any[]>([])
@@ -15,6 +16,7 @@ export default function AdminRoteiros() {
     titulo: '', slug: '', descricao: '', duracao_dias: '', foto_capa: '', publico: true
   })
   const [atrativosSelecionados, setAtrativosSelecionados] = useState<{ atrativo_id: string, dia: number, ordem: number, observacao: string }[]>([])
+  const [adminEmail, setAdminEmail] = useState('')
   const supabase = createClient()
 
   useEffect(() => {
@@ -24,6 +26,7 @@ export default function AdminRoteiros() {
         window.location.href = '/'
         return
       }
+      setAdminEmail(user.email)
       await Promise.all([carregarAtrativos(), carregarRoteiros()])
     }
     init()
@@ -109,6 +112,7 @@ export default function AdminRoteiros() {
         await supabase.from('roteiro_atrativos').insert(itens)
       }
 
+      await registrarLogAdmin(adminEmail, 'criar', 'roteiros', roteiro.id, { titulo: form.titulo })
       setForm({ titulo: '', slug: '', descricao: '', duracao_dias: '', foto_capa: '', publico: true })
       setAtrativosSelecionados([])
       await carregarRoteiros()
@@ -118,7 +122,9 @@ export default function AdminRoteiros() {
 
   const handleDeletar = async (id: string) => {
     if (!confirm('Deletar este roteiro?')) return
+    const roteiro = roteiros.find(r => r.id === id)
     await supabase.from('roteiros').delete().eq('id', id)
+    await registrarLogAdmin(adminEmail, 'deletar', 'roteiros', id, { titulo: roteiro?.titulo })
     setRoteiros(roteiros.filter(r => r.id !== id))
   }
 
