@@ -11,11 +11,14 @@ export async function registrarLogAdmin(
   detalhes?: Record<string, any>
 ) {
   const supabase = createClient()
-  await supabase.from('admin_logs').insert({
+  const { error } = await supabase.from('admin_logs').insert({
     admin_email: adminEmail,
     acao,
     tabela,
     registro_id: registroId,
     detalhes: detalhes || null,
   })
+  if (error) {
+    console.error('Erro ao registrar log de admin:', error)
+  }
 }

@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { supabase } from '../../../lib/supabase'
 import { notFound } from 'next/navigation'
 import SalvarRoteiroButton from '../../components/SalvarRoteiroButton'
-
+import RoteiroDetailClient from './RoteiroDetailClient'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -26,7 +26,15 @@ export default async function RoteiroPage({ params }: Props) {
     .order('dia')
     .order('ordem')
 
-  const dias = [...new Set(itens?.map((i) => i.dia))].sort()
+  let criador = null
+  if (roteiro.user_id) {
+    const { data: perfil } = await supabase
+      .from('profiles')
+      .select('nome, avatar_url')
+      .eq('id', roteiro.user_id)
+      .single()
+    criador = perfil
+  }
 
   return (
     <main className="min-h-screen bg-white">
@@ -67,57 +75,7 @@ export default async function RoteiroPage({ params }: Props) {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-6 py-12">
-        {roteiro.descricao && (
-          <p className="text-lg text-gray-600 leading-relaxed mb-12">{roteiro.descricao}</p>
-        )}
-
-        {/* Itinerário por dia */}
-        {dias.map((dia) => (
-          <div key={dia} className="mb-12">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-3">
-              <span className="w-8 h-8 rounded-full bg-gray-900 text-white text-sm flex items-center justify-center">
-                {dia}
-              </span>
-              Dia {dia}
-            </h2>
-
-            <div className="space-y-4">
-              {itens
-                ?.filter((i) => i.dia === dia)
-                .map((item) => (
-                  <Link
-                    key={item.id}
-                    href={`/atrativos/${item.atrativos?.slug}`}
-                    className="flex gap-4 p-4 rounded-2xl border border-gray-100 hover:border-gray-300 transition-colors group"
-                  >
-                    <div className="w-24 h-24 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
-                      {item.atrativos?.foto_capa ? (
-                        <img
-                          src={item.atrativos.foto_capa}
-                          alt={item.atrativos.nome}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-xs text-gray-400 mb-1">{item.atrativos?.categoria}</p>
-                      <p className="font-semibold text-gray-900">{item.atrativos?.nome}</p>
-                      <p className="text-sm text-gray-400 mt-0.5">
-                        {item.atrativos?.municipios?.nome}, {item.atrativos?.municipios?.estado}
-                      </p>
-                      {item.observacao && (
-                        <p className="text-sm text-gray-500 mt-2 italic">"{item.observacao}"</p>
-                      )}
-                    </div>
-                  </Link>
-                ))}
-            </div>
-          </div>
-        ))}
-      </div>
+      <RoteiroDetailClient roteiro={roteiro} itensIniciais={itens || []} criador={criador} />
 
       <footer className="border-t border-gray-100 py-8 px-6 mt-10">
         <div className="max-w-6xl mx-auto text-center text-sm text-gray-400">

@@ -335,7 +335,12 @@ export default function RoteirosClient({ roteirosPublicos }: Props) {
                   {meusRoteiros.map((roteiro) => (
                     <div key={roteiro.id} className="border border-gray-100 rounded-2xl p-6 hover:border-gray-200 transition-colors">
                       <div className="flex items-start justify-between mb-4">
-                        <h2 className="font-semibold text-gray-900 text-lg leading-tight">{roteiro.titulo}</h2>
+                        <Link
+                          href={`/roteiros/${roteiro.slug}`}
+                          className="font-semibold text-gray-900 text-lg leading-tight hover:underline underline-offset-2"
+                        >
+                          {roteiro.titulo}
+                        </Link>
                         <button
                           onClick={() => handleTogglePublico(roteiro)}
                           className={`text-xs px-2 py-0.5 rounded-full ml-2 flex-shrink-0 transition-colors ${
