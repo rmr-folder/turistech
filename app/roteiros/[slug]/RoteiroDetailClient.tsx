@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { createClient } from '../../../lib/supabase-browser'
 import { isAdmin } from '../../../lib/admin'
 
@@ -9,9 +10,11 @@ interface Props {
   roteiro: any
   itensIniciais: any[]
   criador: { nome: string; avatar_url: string } | null
+  abrirEdicao?: boolean
 }
 
-export default function RoteiroDetailClient({ roteiro, itensIniciais, criador }: Props) {
+export default function RoteiroDetailClient({ roteiro, itensIniciais, criador, abrirEdicao }: Props) {
+  const router = useRouter()
   const [user, setUser] = useState<any>(null)
   const [ehAdmin, setEhAdmin] = useState(false)
   const [canEdit, setCanEdit] = useState(false)
@@ -27,6 +30,10 @@ export default function RoteiroDetailClient({ roteiro, itensIniciais, criador }:
   const [dropdownAberto, setDropdownAberto] = useState(false)
   const [processando, setProcessando] = useState(false)
   const [updatedAt, setUpdatedAt] = useState(roteiro.updated_at)
+  const [descricaoAtual, setDescricaoAtual] = useState(roteiro.descricao || '')
+  const [fotoAtual, setFotoAtual] = useState(roteiro.foto_capa || '')
+  const [uploadandoFoto, setUploadandoFoto] = useState(false)
+  const [salvandoInfo, setSalvandoInfo] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
@@ -35,7 +42,11 @@ export default function RoteiroDetailClient({ roteiro, itensIniciais, criador }:
       setUser(user)
       const admin = await isAdmin(user?.email)
       setEhAdmin(admin)
-      setCanEdit(!!user && (user.id === roteiro.user_id || admin))
+      const podeEditar = !!user && (user.id === roteiro.user_id || admin)
+      setCanEdit(podeEditar)
+      if (abrirEdicao && podeEditar) {
+        await handleEntrarModoEdicao()
+      }
     }
     init()
   }, [])
@@ -55,6 +66,33 @@ export default function RoteiroDetailClient({ roteiro, itensIniciais, criador }:
   }
 
   const marcarAtualizado = () => setUpdatedAt(new Date().toISOString())
+
+  const handleUploadFoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadandoFoto(true)
+    const ext = file.name.split('.').pop()
+    const fileName = `roteiro-${roteiro.slug}-${Date.now()}.${ext}`
+    const { error } = await supabase.storage.from('imagens').upload(fileName, file)
+    if (!error) {
+      const { data } = supabase.storage.from('imagens').getPublicUrl(fileName)
+      setFotoAtual(data.publicUrl)
+    }
+    setUploadandoFoto(false)
+  }
+
+  const handleSalvarInfo = async () => {
+    setSalvandoInfo(true)
+    const { error } = await supabase
+      .from('roteiros')
+      .update({ descricao: descricaoAtual || null, foto_capa: fotoAtual || null })
+      .eq('id', roteiro.id)
+    if (!error) {
+      marcarAtualizado()
+      router.refresh()
+    }
+    setSalvandoInfo(false)
+  }
 
   const handleAdicionarDia = () => {
     const proximoDia = diasExibidos.length > 0 ? Math.max(...diasExibidos) + 1 : 1
@@ -189,8 +227,42 @@ export default function RoteiroDetailClient({ roteiro, itensIniciais, criador }:
         )}
       </div>
 
-      {roteiro.descricao && (
-        <p className="text-lg text-gray-600 leading-relaxed mb-12">{roteiro.descricao}</p>
+      {estaEditando ? (
+        <div className="mb-12 bg-gray-50 rounded-2xl p-5 space-y-4">
+          <div>
+            <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1">Descrição</label>
+            <textarea
+              value={descricaoAtual}
+              onChange={(e) => setDescricaoAtual(e.target.value)}
+              rows={3}
+              placeholder="Descreva o roteiro..."
+              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-2">Foto de capa</label>
+            <div className="flex gap-3 items-center">
+              <label className="flex-shrink-0 cursor-pointer bg-white hover:bg-gray-100 border border-gray-200 px-4 py-2.5 rounded-xl text-sm text-gray-600 font-medium">
+                {uploadandoFoto ? 'Enviando...' : '📷 Trocar foto'}
+                <input type="file" accept="image/*" onChange={handleUploadFoto} className="hidden" />
+              </label>
+              {fotoAtual && (
+                <img src={fotoAtual} alt="Preview" className="h-14 w-20 object-cover rounded-lg" />
+              )}
+            </div>
+          </div>
+          <button
+            onClick={handleSalvarInfo}
+            disabled={salvandoInfo}
+            className="text-sm bg-gray-900 text-white px-5 py-2.5 rounded-xl font-medium hover:bg-gray-700 transition-colors disabled:opacity-50"
+          >
+            {salvandoInfo ? 'Salvando...' : 'Salvar informações'}
+          </button>
+        </div>
+      ) : (
+        descricaoAtual && (
+          <p className="text-lg text-gray-600 leading-relaxed mb-12">{descricaoAtual}</p>
+        )
       )}
 
       {/* Dias */}

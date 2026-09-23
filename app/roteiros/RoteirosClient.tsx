@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '../../lib/supabase-browser'
+import { getFotoRoteiro } from '../../lib/roteiroFoto'
 
 interface Props {
   roteirosPublicos: any[]
@@ -22,7 +23,8 @@ export default function RoteirosClient({ roteirosPublicos }: Props) {
     const [copiado, setCopiado] = useState('')
   const [criandoNovo, setCriandoNovo] = useState(false)
   const [salvandoNovo, setSalvandoNovo] = useState(false)
-  const [novoRoteiro, setNovoRoteiro] = useState({ titulo: '', duracao_dias: '', publico: false })
+  const [novoRoteiro, setNovoRoteiro] = useState({ titulo: '', descricao: '', foto_capa: '', publico: false })
+  const [uploadandoNovo, setUploadandoNovo] = useState(false)
   const supabase = createClient()
 
   const gerarSlug = (nome: string) => {
@@ -34,6 +36,20 @@ export default function RoteirosClient({ roteirosPublicos }: Props) {
       .replace(/(^-|-$)/g, '')
   }
 
+  const handleUploadNovoRoteiro = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadandoNovo(true)
+    const ext = file.name.split('.').pop()
+    const fileName = `roteiro-${gerarSlug(novoRoteiro.titulo || 'sem-nome')}-${Date.now()}.${ext}`
+    const { error } = await supabase.storage.from('imagens').upload(fileName, file)
+    if (!error) {
+      const { data } = supabase.storage.from('imagens').getPublicUrl(fileName)
+      setNovoRoteiro({ ...novoRoteiro, foto_capa: data.publicUrl })
+    }
+    setUploadandoNovo(false)
+  }
+
   const handleCriarRoteiro = async () => {
     if (!novoRoteiro.titulo || !user) return
     setSalvandoNovo(true)
@@ -43,7 +59,8 @@ export default function RoteirosClient({ roteirosPublicos }: Props) {
       .insert({
         titulo: novoRoteiro.titulo,
         slug: `${slugBase}-${Date.now().toString().slice(-5)}`,
-        duracao_dias: novoRoteiro.duracao_dias ? Number(novoRoteiro.duracao_dias) : null,
+        descricao: novoRoteiro.descricao || null,
+        foto_capa: novoRoteiro.foto_capa || null,
         publico: novoRoteiro.publico,
         user_id: user.id,
       })
@@ -52,7 +69,7 @@ export default function RoteirosClient({ roteirosPublicos }: Props) {
 
     if (!error && data) {
       setMeusRoteiros([{ ...data, roteiro_atrativos: [] }, ...meusRoteiros])
-      setNovoRoteiro({ titulo: '', duracao_dias: '', publico: false })
+      setNovoRoteiro({ titulo: '', descricao: '', foto_capa: '', publico: false })
       setCriandoNovo(false)
     }
     setSalvandoNovo(false)
@@ -199,12 +216,14 @@ export default function RoteirosClient({ roteirosPublicos }: Props) {
           <p className="text-gray-500 mb-10">Roteiros curados para inspirar sua próxima viagem</p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {roteirosPublicos?.map((roteiro) => (
+            {roteirosPublicos?.map((roteiro) => {
+              const foto = getFotoRoteiro(roteiro)
+              return (
               <Link key={roteiro.id} href={`/roteiros/${roteiro.slug}`} className="group">
                 <div className="relative h-52 rounded-2xl overflow-hidden bg-gray-100 mb-4">
-                  {roteiro.foto_capa ? (
+                  {foto ? (
                     <img
-                      src={roteiro.foto_capa}
+                      src={foto}
                       alt={roteiro.titulo}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
@@ -225,7 +244,8 @@ export default function RoteirosClient({ roteirosPublicos }: Props) {
                   <p className="text-sm text-gray-400 mt-1 line-clamp-2">{roteiro.descricao}</p>
                 )}
               </Link>
-            ))}
+              )
+            })}
           </div>
 
           {roteirosPublicos?.length === 0 && (
@@ -332,7 +352,9 @@ export default function RoteirosClient({ roteirosPublicos }: Props) {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {meusRoteiros.map((roteiro) => (
+                  {meusRoteiros.map((roteiro) => {
+                    const fotoMeuRoteiro = getFotoRoteiro(roteiro)
+                    return (
                     <div key={roteiro.id} className="border border-gray-100 rounded-2xl p-6 hover:border-gray-200 transition-colors">
                       <div className="flex items-start justify-between mb-4">
                         <Link
@@ -393,6 +415,12 @@ export default function RoteirosClient({ roteirosPublicos }: Props) {
                           {roteiro.roteiro_atrativos?.length} atrativo{roteiro.roteiro_atrativos?.length !== 1 ? 's' : ''}
                         </p>
                         <div className="flex items-center gap-3">
+                          <Link
+                            href={`/roteiros/${roteiro.slug}?editar=true`}
+                            className="text-xs text-gray-400 hover:text-gray-900 transition-colors"
+                          >
+                            Editar
+                          </Link>
                           <button
                             onClick={() => handleCompartilhar(roteiro)}
                             className="text-xs text-gray-400 hover:text-gray-900 transition-colors"
@@ -409,7 +437,8 @@ export default function RoteirosClient({ roteirosPublicos }: Props) {
                         </div>
                       </div>
                     </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </>
@@ -450,7 +479,9 @@ export default function RoteirosClient({ roteirosPublicos }: Props) {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {roteirosSalvos.map((roteiro) => (
+                  {roteirosSalvos.map((roteiro) => {
+                    const fotoSalvo = getFotoRoteiro(roteiro)
+                    return (
                     <div key={roteiro.salvoId} className="group relative">
                       <button
                         onClick={() => handleRemoverSalvo(roteiro.salvoId)}
@@ -461,9 +492,9 @@ export default function RoteirosClient({ roteirosPublicos }: Props) {
                       </button>
                       <Link href={`/roteiros/${roteiro.slug}`}>
                         <div className="relative h-52 rounded-2xl overflow-hidden bg-gray-100 mb-4">
-                          {roteiro.foto_capa ? (
+                          {fotoSalvo ? (
                             <img
-                              src={roteiro.foto_capa}
+                              src={fotoSalvo}
                               alt={roteiro.titulo}
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             />
@@ -485,7 +516,8 @@ export default function RoteirosClient({ roteirosPublicos }: Props) {
                         )}
                       </Link>
                     </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </>

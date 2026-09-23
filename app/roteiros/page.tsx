@@ -8,7 +8,7 @@ export const revalidate = 0
 export default async function RoteirosPage() {
   const { data: roteiros } = await supabase
     .from('roteiros')
-    .select('*')
+    .select(`*, roteiro_atrativos (id, atrativos (id, nome, slug, foto_capa, categoria))`)
     .eq('publico', true)
     .order('created_at', { ascending: false })
 

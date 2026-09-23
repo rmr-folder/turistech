@@ -2,14 +2,18 @@ import Link from 'next/link'
 import { supabase } from '../../../lib/supabase'
 import { notFound } from 'next/navigation'
 import SalvarRoteiroButton from '../../components/SalvarRoteiroButton'
+import BackButton from '../../components/BackButton'
 import RoteiroDetailClient from './RoteiroDetailClient'
+import { getFotoRoteiro } from '../../../lib/roteiroFoto'
 
 interface Props {
   params: Promise<{ slug: string }>
+  searchParams: Promise<{ editar?: string }>
 }
 
-export default async function RoteiroPage({ params }: Props) {
+export default async function RoteiroPage({ params, searchParams }: Props) {
   const { slug } = await params
+  const { editar } = await searchParams
 
   const { data: roteiro } = await supabase
     .from('roteiros')
@@ -26,6 +30,8 @@ export default async function RoteiroPage({ params }: Props) {
     .order('dia')
     .order('ordem')
 
+  const fotoExibida = getFotoRoteiro({ ...roteiro, roteiro_atrativos: itens || [] })
+
   let criador = null
   if (roteiro.user_id) {
     const { data: perfil } = await supabase
@@ -40,9 +46,7 @@ export default async function RoteiroPage({ params }: Props) {
     <main className="min-h-screen bg-white">
       <header className="sticky top-0 z-50 bg-white border-b border-gray-100 px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center gap-4">
-          <Link href="/" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
-            ← turistech
-          </Link>
+          <BackButton />
           <span className="text-gray-300">/</span>
           <Link href="/roteiros" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
             Roteiros
@@ -55,9 +59,9 @@ export default async function RoteiroPage({ params }: Props) {
         <div className="absolute top-4 right-4 z-10">
           <SalvarRoteiroButton roteiroId={roteiro.id} />
         </div>
-        {roteiro.foto_capa ? (
+        {fotoExibida ? (
           <img
-            src={roteiro.foto_capa}
+            src={fotoExibida}
             alt={roteiro.titulo}
             className="w-full h-full object-cover"
           />
@@ -75,7 +79,7 @@ export default async function RoteiroPage({ params }: Props) {
         </div>
       </div>
 
-      <RoteiroDetailClient roteiro={roteiro} itensIniciais={itens || []} criador={criador} />
+      <RoteiroDetailClient roteiro={roteiro} itensIniciais={itens || []} criador={criador} abrirEdicao={editar === 'true'} />
 
       <footer className="border-t border-gray-100 py-8 px-6 mt-10">
         <div className="max-w-6xl mx-auto text-center text-sm text-gray-400">

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { registrarEvento } from '../../lib/eventos'
+import { getFotoRoteiro } from '../../lib/roteiroFoto'
 
 interface Atrativo {
   id: string
@@ -30,6 +31,7 @@ interface Roteiro {
   descricao: string
   duracao_dias: number
   foto_capa: string
+  roteiro_atrativos?: any[]
 }
 
 interface Props {
@@ -194,8 +196,8 @@ export default function ExplorarClient({ municipios, atrativos, roteiros, estado
                 {roteirosFiltrados.map((roteiro) => (
                   <Link key={roteiro.id} href={`/roteiros/${roteiro.slug}`} className="group">
                     <div className="relative h-40 rounded-2xl overflow-hidden bg-gray-100 mb-2">
-                      {roteiro.foto_capa ? (
-                        <img src={roteiro.foto_capa} alt={roteiro.titulo} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      {getFotoRoteiro(roteiro) ? (
+                        <img src={getFotoRoteiro(roteiro)!} alt={roteiro.titulo} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
                           <span className="text-3xl">🗺️</span>
@@ -237,8 +239,8 @@ export default function ExplorarClient({ municipios, atrativos, roteiros, estado
                 {roteiros.slice(0, 5).map((roteiro) => (
                   <Link key={roteiro.id} href={`/roteiros/${roteiro.slug}`} className="flex-shrink-0 w-56 group">
                     <div className="relative h-36 rounded-2xl overflow-hidden bg-gray-100 mb-2">
-                      {roteiro.foto_capa ? (
-                        <img src={roteiro.foto_capa} alt={roteiro.titulo} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      {getFotoRoteiro(roteiro) ? (
+                        <img src={getFotoRoteiro(roteiro)!} alt={roteiro.titulo} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
                           <span className="text-3xl">🗺️</span>

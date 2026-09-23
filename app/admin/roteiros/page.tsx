@@ -13,7 +13,7 @@ export default function AdminRoteiros() {
   const [salvando, setSalvando] = useState(false)
   const [uploadando, setUploadando] = useState(false)
   const [form, setForm] = useState({
-    titulo: '', slug: '', descricao: '', duracao_dias: '', foto_capa: '', publico: true
+    titulo: '', slug: '', descricao: '', foto_capa: '', publico: true
   })
   const [atrativosSelecionados, setAtrativosSelecionados] = useState<{ atrativo_id: string, dia: number, ordem: number, observacao: string }[]>([])
   const [adminEmail, setAdminEmail] = useState('')
@@ -96,7 +96,6 @@ export default function AdminRoteiros() {
         titulo: form.titulo,
         slug: form.slug,
         descricao: form.descricao,
-        duracao_dias: form.duracao_dias ? parseInt(form.duracao_dias) : null,
         foto_capa: form.foto_capa,
         publico: form.publico,
       })
@@ -113,7 +112,7 @@ export default function AdminRoteiros() {
       }
 
       await registrarLogAdmin(adminEmail, 'criar', 'roteiros', roteiro.id, { titulo: form.titulo })
-      setForm({ titulo: '', slug: '', descricao: '', duracao_dias: '', foto_capa: '', publico: true })
+      setForm({ titulo: '', slug: '', descricao: '', foto_capa: '', publico: true })
       setAtrativosSelecionados([])
       await carregarRoteiros()
     }
@@ -170,29 +169,16 @@ export default function AdminRoteiros() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1">Duração (dias)</label>
-                <input
-                  type="number"
-                  value={form.duracao_dias}
-                  onChange={(e) => setForm({ ...form, duracao_dias: e.target.value })}
-                  placeholder="Ex: 3"
-                  min={1}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1">Visibilidade</label>
-                <select
-                  value={form.publico ? 'publico' : 'privado'}
-                  onChange={(e) => setForm({ ...form, publico: e.target.value === 'publico' })}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
-                >
-                  <option value="publico">Público</option>
-                  <option value="privado">Privado</option>
-                </select>
-              </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1">Visibilidade</label>
+              <select
+                value={form.publico ? 'publico' : 'privado'}
+                onChange={(e) => setForm({ ...form, publico: e.target.value === 'publico' })}
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
+              >
+                <option value="publico">Público</option>
+                <option value="privado">Privado</option>
+              </select>
             </div>
 
             <div>
