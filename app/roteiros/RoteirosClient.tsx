@@ -300,15 +300,27 @@ export default function RoteirosClient({ roteirosPublicos }: Props) {
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1">Duração (dias)</label>
-                        <input
-                          type="number"
-                          min={1}
-                          value={novoRoteiro.duracao_dias}
-                          onChange={(e) => setNovoRoteiro({ ...novoRoteiro, duracao_dias: e.target.value })}
-                          placeholder="Ex: 3"
+                        <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1">Descrição</label>
+                        <textarea
+                          value={novoRoteiro.descricao}
+                          onChange={(e) => setNovoRoteiro({ ...novoRoteiro, descricao: e.target.value })}
+                          placeholder="Descreva o roteiro..."
+                          rows={3}
                           className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900"
                         />
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-2">Foto de capa</label>
+                        <label className="flex items-center justify-center gap-2 cursor-pointer bg-gray-100 hover:bg-gray-200 px-4 py-3 rounded-xl text-sm text-gray-600 font-medium">
+                          {uploadandoNovo ? 'Enviando...' : (novoRoteiro.foto_capa ? 'Trocar foto' : '📷 Upload de foto (opcional)')}
+                          <input type="file" accept="image/*" onChange={handleUploadNovoRoteiro} className="hidden" />
+                        </label>
+                        {novoRoteiro.foto_capa && (
+                          <img src={novoRoteiro.foto_capa} alt="Preview" className="mt-3 h-32 w-full object-cover rounded-xl" />
+                        )}
+                        {!novoRoteiro.foto_capa && (
+                          <p className="text-xs text-gray-400 mt-2">Se não enviar, usaremos automaticamente a foto de um dos atrativos do roteiro.</p>
+                        )}
                       </div>
                       <label className="flex items-center gap-2 text-sm text-gray-600">
                         <input
