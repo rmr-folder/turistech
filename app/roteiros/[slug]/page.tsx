@@ -36,7 +36,7 @@ export default async function RoteiroPage({ params, searchParams }: Props) {
   if (roteiro.user_id) {
     const { data: perfil } = await supabase
       .from('profiles')
-      .select('nome, avatar_url')
+      .select('nome, avatar_url, username')
       .eq('id', roteiro.user_id)
       .single()
     criador = perfil

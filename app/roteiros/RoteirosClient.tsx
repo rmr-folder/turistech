@@ -10,7 +10,7 @@ interface Props {
 }
 
 export default function RoteirosClient({ roteirosPublicos }: Props) {
-  const [aba, setAba] = useState<'descobrir' | 'meus' | 'salvos'>('descobrir')
+  const [aba, setAba] = useState<'descobrir' | 'meus' | 'salvos' | 'seguindo'>('descobrir')
   const [user, setUser] = useState<any>(null)
   const [checandoUser, setCheckandoUser] = useState(true)
   const [meusRoteiros, setMeusRoteiros] = useState<any[]>([])
@@ -19,6 +19,9 @@ export default function RoteirosClient({ roteirosPublicos }: Props) {
   const [roteirosSalvos, setRoteirosSalvos] = useState<any[]>([])
   const [carregandoSalvos, setCarregandoSalvos] = useState(false)
   const [jaCarregouSalvos, setJaCarregouSalvos] = useState(false)
+  const [roteirosSeguindo, setRoteirosSeguindo] = useState<any[]>([])
+  const [carregandoSeguindo, setCarregandoSeguindo] = useState(false)
+  const [jaCarregouSeguindo, setJaCarregouSeguindo] = useState(false)
   const [deletando, setDeletando] = useState('')
     const [copiado, setCopiado] = useState('')
   const [criandoNovo, setCriandoNovo] = useState(false)
@@ -91,6 +94,9 @@ export default function RoteirosClient({ roteirosPublicos }: Props) {
     if (aba === 'salvos' && user && !jaCarregouSalvos) {
       carregarSalvos(user.id)
     }
+    if (aba === 'seguindo' && user && !jaCarregouSeguindo) {
+      carregarSeguindo(user.id)
+    }
   }, [aba, user])
 
   const carregarMeusRoteiros = async (userId: string) => {
@@ -133,6 +139,34 @@ export default function RoteirosClient({ roteirosPublicos }: Props) {
     )
     setCarregandoSalvos(false)
     setJaCarregouSalvos(true)
+  }
+
+  const carregarSeguindo = async (userId: string) => {
+    setCarregandoSeguindo(true)
+    const { data: seguindoIds } = await supabase
+      .from('seguidores')
+      .select('following_id')
+      .eq('follower_id', userId)
+
+    const ids = (seguindoIds || []).map((s) => s.following_id)
+
+    if (ids.length === 0) {
+      setRoteirosSeguindo([])
+      setCarregandoSeguindo(false)
+      setJaCarregouSeguindo(true)
+      return
+    }
+
+    const { data } = await supabase
+      .from('roteiros')
+      .select(`*, roteiro_atrativos (id, atrativos (id, nome, slug, foto_capa, categoria)), profiles!roteiros_user_id_fkey (nome, username, avatar_url)`)
+      .in('user_id', ids)
+      .eq('publico', true)
+      .order('created_at', { ascending: false })
+
+    setRoteirosSeguindo(data || [])
+    setCarregandoSeguindo(false)
+    setJaCarregouSeguindo(true)
   }
 
   const handleRemoverSalvo = async (salvoId: string) => {
@@ -207,6 +241,14 @@ export default function RoteirosClient({ roteirosPublicos }: Props) {
           }`}
         >
           Salvos
+        </button>
+        <button
+          onClick={() => setAba('seguindo')}
+          className={`text-sm font-medium px-4 py-2 rounded-full transition-colors ${
+            aba === 'seguindo' ? 'bg-gray-900 text-white' : 'text-gray-500 hover:bg-gray-100'
+          }`}
+        >
+          Seguindo
         </button>
       </div>
 
@@ -528,6 +570,60 @@ export default function RoteirosClient({ roteirosPublicos }: Props) {
                         )}
                       </Link>
                     </div>
+                    )
+                  })}
+                </div>
+              )}
+            </>
+          )}
+        </>
+      )}
+
+      {aba === 'seguindo' && (
+        <>
+          {checandoUser ? (
+            <p className="text-gray-400 text-center py-20">Carregando...</p>
+          ) : !user ? (
+            <div className="text-center py-20">
+              <p className="text-gray-500 mb-6">Entre para ver roteiros de quem você segue.</p>
+              <button
+                onClick={handleLoginGoogle}
+                className="text-sm bg-gray-900 text-white px-6 py-3 rounded-full hover:bg-gray-700 transition-colors"
+              >
+                Entrar com Google
+              </button>
+            </div>
+          ) : (
+            <>
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">Seguindo</h1>
+              <p className="text-gray-500 mb-10">Roteiros públicos de quem você segue</p>
+
+              {carregandoSeguindo ? (
+                <p className="text-gray-400 text-center py-20">Carregando...</p>
+              ) : roteirosSeguindo.length === 0 ? (
+                <p className="text-gray-400 text-center py-20">
+                  Ninguém que você segue publicou roteiros ainda — ou você ainda não segue ninguém.
+                </p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {roteirosSeguindo.map((roteiro) => {
+                    const foto = getFotoRoteiro(roteiro)
+                    return (
+                      <Link key={roteiro.id} href={`/roteiros/${roteiro.slug}`} className="group">
+                        <div className="relative h-52 rounded-2xl overflow-hidden bg-gray-100 mb-4">
+                          {foto ? (
+                            <img src={foto} alt={roteiro.titulo} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                              <span className="text-4xl">🗺️</span>
+                            </div>
+                          )}
+                        </div>
+                        <p className="font-semibold text-gray-900">{roteiro.titulo}</p>
+                        {roteiro.profiles?.nome && (
+                          <p className="text-xs text-gray-400 mt-1">por {roteiro.profiles.nome}</p>
+                        )}
+                      </Link>
                     )
                   })}
                 </div>

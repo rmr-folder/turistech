@@ -20,6 +20,11 @@ export default async function ExplorarPage() {
     .eq('publico', true)
     .order('created_at', { ascending: false })
 
+  const { data: pessoas } = await supabase
+    .from('profiles')
+    .select('id, nome, username, avatar_url, bio')
+    .not('username', 'is', null)
+
   const estados = [...new Set(municipios?.map((m) => m.estado))].sort() as string[]
   const categorias = [...new Set(atrativos?.map((a) => a.categoria))].sort() as string[]
 
@@ -49,6 +54,7 @@ export default async function ExplorarPage() {
           municipios={municipios || []}
           atrativos={atrativos || []}
           roteiros={roteiros || []}
+          pessoas={pessoas || []}
           estados={estados}
           categorias={categorias}
         />

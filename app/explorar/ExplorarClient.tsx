@@ -34,10 +34,19 @@ interface Roteiro {
   roteiro_atrativos?: any[]
 }
 
+interface Pessoa {
+  id: string
+  nome: string
+  username: string
+  avatar_url: string
+  bio: string
+}
+
 interface Props {
   municipios: Municipio[]
   atrativos: Atrativo[]
   roteiros: Roteiro[]
+  pessoas: Pessoa[]
   estados: string[]
   categorias: string[]
 }
@@ -51,7 +60,7 @@ const TIPOS = [
   { label: 'Religioso', emoji: '🙏', cor: 'from-purple-500 to-violet-400' },
 ]
 
-export default function ExplorarClient({ municipios, atrativos, roteiros, estados, categorias }: Props) {
+export default function ExplorarClient({ municipios, atrativos, roteiros, pessoas, estados, categorias }: Props) {
   const [busca, setBusca] = useState('')
   const [tipoSelecionado, setTipoSelecionado] = useState('')
 
@@ -76,6 +85,14 @@ export default function ExplorarClient({ municipios, atrativos, roteiros, estado
   const roteirosFiltrados = roteiros.filter((r) => {
     const bateBusca = !busca || r.titulo.toLowerCase().includes(busca.toLowerCase())
     return bateBusca
+  })
+
+  const pessoasFiltradas = pessoas.filter((p) => {
+    if (!busca) return false
+    return (
+      p.nome?.toLowerCase().includes(busca.toLowerCase()) ||
+      p.username?.toLowerCase().includes(busca.toLowerCase())
+    )
   })
 
   return (
@@ -188,6 +205,30 @@ export default function ExplorarClient({ municipios, atrativos, roteiros, estado
             </div>
           )}
 
+          {/* Pessoas */}
+          {pessoasFiltradas.length > 0 && (
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Pessoas</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {pessoasFiltradas.map((pessoa) => (
+                  <Link key={pessoa.id} href={`/perfil/${pessoa.username}`} className="flex items-center gap-3 p-3 rounded-2xl border border-gray-100 hover:border-gray-300 transition-colors">
+                    {pessoa.avatar_url ? (
+                      <img src={pessoa.avatar_url} alt={pessoa.nome} className="w-12 h-12 rounded-full flex-shrink-0" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-semibold flex-shrink-0">
+                        {pessoa.nome?.[0]?.toUpperCase() || '?'}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">{pessoa.nome}</p>
+                      <p className="text-xs text-gray-400 truncate">@{pessoa.username}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Roteiros */}
           {roteirosFiltrados.length > 0 && !tipoSelecionado && (
             <div>
@@ -219,7 +260,7 @@ export default function ExplorarClient({ municipios, atrativos, roteiros, estado
             </div>
           )}
 
-          {municipiosFiltrados.length === 0 && agrativosFiltrados.length === 0 && roteirosFiltrados.length === 0 && (
+          {municipiosFiltrados.length === 0 && agrativosFiltrados.length === 0 && roteirosFiltrados.length === 0 && pessoasFiltradas.length === 0 && (
             <p className="text-gray-400 text-center py-20">Nenhum resultado encontrado.</p>
           )}
         </div>

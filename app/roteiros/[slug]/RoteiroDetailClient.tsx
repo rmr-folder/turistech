@@ -9,7 +9,7 @@ import { isAdmin } from '../../../lib/admin'
 interface Props {
   roteiro: any
   itensIniciais: any[]
-  criador: { nome: string; avatar_url: string } | null
+  criador: { nome: string; avatar_url: string; username?: string } | null
   abrirEdicao?: boolean
 }
 
@@ -198,22 +198,37 @@ export default function RoteiroDetailClient({ roteiro, itensIniciais, criador, a
     <div className="max-w-4xl mx-auto px-6 py-12">
       {/* Cabeçalho: criador, datas, editar */}
       <div className="flex items-start justify-between mb-8 pb-8 border-b border-gray-100">
-        <div className="flex items-center gap-3">
-          {criador?.avatar_url ? (
-            <img src={criador.avatar_url} alt={criador.nome} className="w-10 h-10 rounded-full" />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-sm font-semibold">
-              {criador?.nome?.[0]?.toUpperCase() || '?'}
+        {criador?.username ? (
+          <Link href={`/perfil/${criador.username}`} className="flex items-center gap-3 group">
+            {criador.avatar_url ? (
+              <img src={criador.avatar_url} alt={criador.nome} className="w-10 h-10 rounded-full" />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-sm font-semibold">
+                {criador.nome?.[0]?.toUpperCase() || '?'}
+              </div>
+            )}
+            <div>
+              <p className="text-sm font-medium text-gray-900 group-hover:underline underline-offset-2">{criador.nome}</p>
+              <p className="text-xs text-gray-400">
+                Criado em {formatarData(roteiro.created_at)}
+                {mostrarAtualizacao && ` · Atualizado em ${formatarData(updatedAt)}`}
+              </p>
             </div>
-          )}
-          <div>
-            <p className="text-sm font-medium text-gray-900">{criador?.nome || 'Turistech'}</p>
-            <p className="text-xs text-gray-400">
-              Criado em {formatarData(roteiro.created_at)}
-              {mostrarAtualizacao && ` · Atualizado em ${formatarData(updatedAt)}`}
-            </p>
+          </Link>
+        ) : (
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-sm font-semibold">
+              🗺️
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-900">Turistech</p>
+              <p className="text-xs text-gray-400">
+                Criado em {formatarData(roteiro.created_at)}
+                {mostrarAtualizacao && ` · Atualizado em ${formatarData(updatedAt)}`}
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         {canEdit && (
           <button
